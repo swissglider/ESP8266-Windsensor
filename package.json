@@ -4,9 +4,7 @@
     "description": "Windsensor",
     "author": "swissglider <npm@mailschweiz.com> (https://github.com/swissglider/ESP8266-Windsensor)",
     "homepage": "https://github.com/swissglider/ESP8266-Windsensor#readme",
-    "scripts": {
-        "git_push": "git pull origin master && git add -A && git commit -m 'new Release' && git push origin master"
-    },
+    "scripts": {},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/swissglider/ESP8266-Windsensor.git"

@@ -1,6 +1,7 @@
 // #################################################
 // ## Framework include
 // #################################################
+#include <Arduino.h>
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 
 // needed for WiFiManager
@@ -54,6 +55,63 @@ const int measureTime = 5;      // messzeitraum in sekunden
 volatile unsigned int windCounter = 0;  //interner zaehler f?r umdrehungen
 float windSpeed = 0.0;
 unsigned long timeL = 0;  // initialisieren der variablen f?r messwerte und die zeitmessung
+
+// #################################################
+// ## Application Functions
+// #################################################
+// **********************************************
+// Write to WebSocket
+
+void writeWebSocketMessage(String json, String sockerURI){
+  http.begin(sockerURI);
+  int httpCode = http.POST(json);
+  http.end();
+}
+
+// **********************************************
+// Write to WindSensor
+
+//interrupt service routine f?r das zaehlen der umdrehungen
+void countWind() {
+   windCounter ++;
+}
+
+void readWindSensor(String& json){
+  //zaehler auf 0 stellen
+  windCounter = 0;
+  timeL = millis();
+  //zaehl-interrupt aktivieren
+  attachInterrupt(windPin,countWind,RISING);
+  //abwarten des messzeitraums
+  delay(1000 * measureTime);
+  //zaehl-interrupt deaktivieren
+  detachInterrupt(windPin);
+  //zeit bestimmen
+  timeL = (millis() - timeL) / 1000;
+  //berechnen der geschwindigkeit
+  windSpeed = (float)windCounter / (float)measureTime * windFactor;
+
+  DynamicJsonBuffer  jsonBuffer;
+  JsonObject& root = jsonBuffer.createObject();
+  JsonObject& fields = root.createNestedObject("values");
+  fields["windCount"] = windCounter;
+  fields["windSpeed"] = windSpeed;
+  root["device"] = device;
+  root["channel"] = channel;
+  root["name"] = name;
+  root.printTo(json);
+}
+
+void show_values(){
+  display.clearDisplay();
+  display.setTextSize(1.5);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+  display.print("Counts: "); display.print(windCounter); display.println("");
+  display.print("Speed:  "); display.print(windSpeed); display.println(" km/h");
+  display.display();
+}
+
 
 
 void setup() {
@@ -132,57 +190,4 @@ void loop() {
   readWindSensor(wind_json);
   writeWebSocketMessage(wind_json, webSockerURI1);
   show_values();
-}
-
-// **********************************************
-// Write to WebSocket
-
-void writeWebSocketMessage(String json, String sockerURI){
-  http.begin(sockerURI);
-  int httpCode = http.POST(json);
-  http.end();
-}
-
-// **********************************************
-// Write to WindSensor
-
-void readWindSensor(String& json){
-  //zaehler auf 0 stellen
-  windCounter = 0;
-  timeL = millis();
-  //zaehl-interrupt aktivieren
-  attachInterrupt(windPin,countWind,RISING);
-  //abwarten des messzeitraums
-  delay(1000 * measureTime);
-  //zaehl-interrupt deaktivieren
-  detachInterrupt(windPin);
-  //zeit bestimmen
-  timeL = (millis() - timeL) / 1000;
-  //berechnen der geschwindigkeit
-  windSpeed = (float)windCounter / (float)measureTime * windFactor;
-
-  DynamicJsonBuffer  jsonBuffer;
-  JsonObject& root = jsonBuffer.createObject();
-  JsonObject& fields = root.createNestedObject("values");
-  fields["windCount"] = double_with_n_digits(windCounter, 2);
-  fields["windSpeed"] = double_with_n_digits(windSpeed, 2);
-  root["device"] = device;
-  root["channel"] = channel;
-  root["name"] = name;
-  root.printTo(json);
-}
-
-//interrupt service routine f?r das zaehlen der umdrehungen
-void countWind() {
-   windCounter ++;
-}
-
-void show_values(){
-  display.clearDisplay();
-  display.setTextSize(1.5);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.print("Counts: "); display.print(windCounter); display.println("");
-  display.print("Speed:  "); display.print(windSpeed); display.println(" km/h");
-  display.display();
 }
