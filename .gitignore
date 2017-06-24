@@ -10,3 +10,5 @@ npm-debug.log
 .coveralls.yml
 .pioenvs
 .piolibdeps
+.clang_complete
+.gcc-flags.json
