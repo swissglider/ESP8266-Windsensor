@@ -7,7 +7,8 @@
 
 Author: [==> swissglider](https://github.com/swissglider)
 
-
+## Schema
+![Image of Fritzing](https://github.com/swissglider/ESP8266-Windsensor/blob/master/fritzing/ESP8266-Windsensor.png?raw=true)
 
 ### Needed libraries:
 - [WifiManager by tzapu](https://github.com/tzapu/WiFiManager.git)
